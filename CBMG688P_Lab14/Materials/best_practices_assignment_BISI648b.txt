@@ -1,0 +1,35 @@
+Due date: This assignment is due Dec 19 at 5:00 pm EST (UTC -5).  It should take 75 +- 30 minutes for those who attended class.  I would appreciate feedback on this time estimate.
+
+Assignment: Write the framework for a script that accepts a --help option and at least 2 other command-line options, and that carries its own internal documentation.  The script does not need to do anything-- we are just focusing on interfaces.
+
+Resources: Everything you need to know for this assignment was demonstrated in class during the cvs, getopt, and perldoc exercises, in which we made changes to stamp_output.pl and esearch_wrapper.pl.   Using the final version of esearch_wrapper.pl as a guide or template will save you time, but don't copy and paste large sections (that's plagiarism).  You may find it helpful to refer to the lesson plans and the external links provided on the Lab15 home page.
+
+Grading: The assignment will be graded as follows:
+
+1. (1 point) The script is named <my_blackboard_username>_best_practices.pl.
+
+2. (2 points) Executing the command:
+
+ <my_blackboard_username>_best_practices.pl --help
+
+issues an informative usage message that describes all available options.
+
+3. (3 points) The script has internal POD such that executing the command
+
+  perldoc <my_blackboard_username>_best_practices.pl
+ 
+reveals the following information:
+* the name of the script in a section entitled NAME
+* the author in a section entitled AUTHOR
+* a synopsis with a usage example in a section entitled SYNOPSIS
+
+4. (3 points) Executing the command:
+
+   <my_blackboard_username>_best_practices.pl --<opt1>=value1 --<opt2>=value2
+
+(where <opt1> and <opt2> refer to your script's options) produces a message indicating that "value1" and "value2" were assigned.  This is what allows me (and you) to test that your command-line interface is working (in our getopt lesson with esearch_wrapper.pl, we did this by printing out the $query_url string on STDERR).  
+
+5.  (1 point) The script has a CVS version string that is accessible in some way.  The simplest way to do this is just to put $Id$ in the NAME section of your POD, then "add" and "commit" the file to the CVS repository you created in class.
+
+
+$Id: best_practices_assignment_BISI648b.txt,v 1.2 2010/12/20 15:27:44 arlin Exp $

@@ -1,0 +1,61 @@
+<html>
+<title>stamp_output_lesson.html -  BISI648b, Best Practices laboratory (Stoltzfus)</title>
+
+<h1>Stamping output (BISI648b Best Practices laboratory, Stoltzfus)</h1>
+
+In this lesson, you will learn to use Perl tools to create a "stamp" so that your output is uniquely identifiable.  
+
+<h2>background</h2>
+Stamping your output is a helpful habit to develop.  Its like writing your name and the date on every assignment, the way that you used to do in grade school.  The stamp allows you to trace the provenance of a result.  If you don't have it, you migth not be able to remember how your produced a file.  You can't be sure from the file name-- names can be changed.  You can't be sure from the date on the file itself.  When files are archived and unpacked, or when they are moved between servers, dates frequently get unintentionally overwritten (or "clobbered" in programmer language).  
+<p>
+How are you going to tell when a file was produced?  Which script (and which version of it) produced the output?  What system was used to compute the result? 
+
+<h2>exercise</h2>
+
+In the previous exercise, we copied over stamp_output.pl, and it looked  like this:
+<pre>
+#!/usr/local/bin/perl -w
+#
+# stamp_output.pl - demo script for BISI648b 
+# 
+use strict; 
+
+my $version = '<code>$</code>Id$'; <!-- we have to hide the id token because this html doc is under cvs control-->
+my $date = ''; 
+my $system = ''; 
+ 
+print "# version = $version\n# date = $date\n# system = $system\n"; 
+
+exit(0); 
+</pre>
+When we changed version to <code>$</code><code>Id$</code>, then committed this to CVS, we got a version stamp on our file.  Here's the version string for this html file: 
+<p>
+$Id: stamp_output_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $
+<p>
+That has a date on it, but its not now-- it's the date this file was checked in last.  How do we get the present time, i.e., now?  
+<code>
+<br>unix_prompt$ date
+</code>
+<p>
+And how can we get some information on our system?  Like this: 
+<code>
+<br>unix_prompt$ uname -a
+</code>
+<p>
+So, now we have everything we need to know except for one thing.  How do we run a system command from within a Perl script?  One way is with <code>system( "command" )</code>, but the one we want is <code>`date`</code>.  The back-ticks are important.  Without them, it won't work.  Try it: 
+<code>
+<br>unix_prompt$ <b>perl -e 'print date'</b>
+<br>unix_prompt$ <b>perl -e 'print "date"'</b>
+<br>unix_prompt$ <b>perl -e 'print `date`'</b>
+</code>
+<P>So, I will leave it to you to incorporate <code>date</code> and <code>uname -a</code> into the script.  
+<p>
+Once that is done, let us check it in again using CVS.  
+<p>
+What if you want to record all of the command-line options?  Can someone figure that out? 
+<footer>
+<hr>
+<p>Arlin Stoltzfus 
+<p>$Id: stamp_output_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $
+</footer>
+</html>

@@ -1,0 +1,112 @@
+<html>
+<title>cvs_lesson.html -  CBMG688P, Best Practices laboratory (Stoltzfus)</title>
+
+<H1>CVS Lesson (CBMG688P, Best Practices laboratory, Stoltzfus)</h1>
+
+In this lesson, you will learn to use a tool called "CVS" (Concurrent Versioning System) to maintain a repository with versions of code (or other) files.  
+
+<h2>background</h2>
+Specifically, you will be the creator and owner of a CVS repository in your
+home directory.  This approach is easy and it gives you complete control.  
+However, for future reference, doing things this way is a poor choice if you want to collaborate.  In that case, use github or a project hosting site such as sourceforge, or ask your sysadmin to set up a CVS repository that others can access via the internet: you can access that using the same CVS commands we are learning in this exercise (but your sysadmin will give you a CVSROOT that refers to some other computer on the internet). 
+
+<h2>exercise</h2>
+<b>hint</b>:use cut & paste, or TAB completion, to save yourselves time!  
+
+<ol>
+<li>first create your own local directory, with some short-cuts (links)
+<code>
+<br>unix_prompt$ <b>mkdir My_BestPractices_CBMG688P</b>
+<br>unix_prompt$ <b>cd My_BestPractices_CBMG688P</b>
+<br>unix_prompt$ <b>ln -s /afs/glue.umd.edu/class/fall2012/cbmg/688p/0101/public/Lab14 Lab14Link </b>
+<br>unix_prompt$ <b>ln -s Lab14Link/Perl class_Perl </b>
+</code>
+</li>
+
+<li>Set up CVS 
+<ol>
+<li>init CVS 
+<code>
+<br>unix_prompt$ <b>cvs -d ~/cvsroot init</b>
+</code>
+</li>
+<li>set your account so that it always knows where to find CVS 
+<code>
+<br>unix_prompt$ <b>echo $SHELL</b>
+</code>
+</li>
+</ol>
+<ul>
+<li>if you are using tcsh, 
+<ol>
+<li>add these lines to  ~/.cshrc.mine
+<code><b>
+<br># CVS stuff -- change emacs to pico or vi if you like
+<br>setenv CVSROOT $HOME/cvsroot
+<br>setenv CVSEDITOR emacs</b>
+</code>
+</li>
+<li>then do the following 
+<code>
+<br>unix_prompt$ <b>source ~/.cshrc.mine  </b>
+<br>unix_prompt$ <b>echo $CVSROOT</b>
+</code>
+</li>
+</ol>
+<li>if you are using bash, 
+<ol>
+<li>add these lines to ~/.bash_profile
+<code><b>
+<br># CVS stuff -- change emacs to pico or vi if you like
+<br>export CVSROOT=$HOME/cvsroot
+<br>export CVSEDITOR=emacs</b>
+</code>
+</li>
+<li>then do the following 
+<code>
+<br>unix_prompt$ <b>source ~/.bash_profile</b>
+<br>unix_prompt$ <b>echo $CVSROOT</b>
+</code>
+</li>
+</ol>
+</ul>
+</li>
+<li>now we are ready to create a project using the class files
+<ul>
+<li>make directory, copy Perl files into it, create cvs module (last command should spit out a list of files in module "my_cvs") 
+<code><br>unix_prompt$ <b>cd My_BestPractices_CBMG688P; mkdir my_cvs </b>
+<br>unix_prompt$ <b>cd my_cvs; mkdir Perl </b>
+<br>unix_prompt$ <b>cp ../class_Perl/*.pl Perl</b>
+<br>unix_prompt$ <b>cvs import -m "CBMG688P code" my_cvs `whoami` initial</b>
+</code>
+</li>
+<li>In order to test whether it worked, we'll delete the local files and check out the "my_cvs" module
+<code><br>unix_prompt$ <b>cd ..; rm -rf my_cvs</b>
+<br>unix_prompt$ <b>cvs checkout my_cvs</b>
+</code>
+</li>
+</ul>
+<li> now, lets do some stuff.  first we will add a new file to the module
+<code>
+<br>unix_prompt$ <b>cd my_cvs/Perl</b>
+<br>unix_prompt$ <b>cp ../../Lab15Link/Materials/stamp_output.pl .</b>
+<br>unix_prompt$ <b>cvs add stamp_output.pl </b>
+<br>unix_prompt$ <b>cvs commit -m "shows how to stamp output" stamp_output.pl</b>
+</code>
+</li>
+<li>now we will edit the file and commit a new version. 
+<!-- note that in the next line, we have to hide the Id token from CVS -->
+<ol><li>edit the file (emacs, pico, vi) so that <code>$version = '$</code><code>Id$';</code> (single-quotes required)
+<code><br>unix_prompt$ <b>emacs stamp_output.pl </b></code></li>
+<li>now we'll "diff", and "commit" the change. Note: we didn't use -m "&lt;revision comments&gt;" so CVS opens text editor 
+<code>
+<br>unix_prompt$ <b>cvs diff stamp_output.pl</b>
+<br>unix_prompt$ <b>cvs commit stamp_output.pl </b>
+</code>
+</li>
+</li>
+</ol>
+<footer>
+<hr>
+<p>Arlin Stoltzfus, 2011
+<p>$Id: cvs_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $</footer></html>

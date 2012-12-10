@@ -1,0 +1,120 @@
+<html>
+<title>perldoc_lesson.html -  BISI648b, Best Practices laboratory (Stoltzfus)</title>
+
+<H1>PerlDoc Lesson (BISI648b, Best Practices laboratory, Stoltzfus)</h1>
+
+In this lesson, you will learn to write POD (plain old documentation). 
+
+<h2>background</h2>
+ see slide presentation
+ 
+<h2>exercise</h2>
+
+We'll be working with the esearch_wrapper.pl script.  
+
+All we are going to do is to paste in some POD (plain old documentation) code, then look at it.  
+<ol>
+<li>before going any further, note that, to ensure consistent formatting, always put <b>blank lines before and  after each perldoc command</b>. 
+The commands are the words preceded by "=" at the beginning of a line.  
+
+<li>first we will add this at the beginning (only the <b>bold</b> part)
+<pre>
+#!/usr/local/bin/perl -w 
+#
+# 
+<b>
+=pod
+
+=head1 NAME
+
+esearch_wrapper.pl - Perl wrapper for NCBI's esearch web service interface
+
+=head1 SYNOPSIS
+
+    esearch_wrapper.pl --email EMAIL --db NCBI_DB --query TERMS --file FILE
+
+    --help, --?         print help message
+
+Where I&lt;FILE&gt; is a file name.
+
+Examples:
+
+    esearch_wrapper.pl --email=nobody@uerewhon.edu --db=genome --query="Thermanaerovibrio+acidaminovorans[organism]" 
+
+=head1 DESCRIPTION
+
+This wraps NCBI's esearch utility, providing an interface to specify the user's email, the NCBI genome division, query terms, and an output file. If no output file is specified, results go into esearch_query_results.xml.  
+
+Note that this only retrieves IDs, at best.  To download the data requires the efetch utility.  
+
+=head1 BUGS
+
+This is a demonstration script for class.  It illustrates some programming practices, but has several known issues: 
+
+We haven't completed the processing of XML results.  
+
+This uses wget (better to use LWP or BioPerl). Currently the output is confusing, due to messages on STDERR from wget.  
+
+=head1 VERSION
+
+<code>$</code>Id$
+
+=head1 AUTHOR
+
+Arlin Stoltzfus (arlin@umd.edu)
+
+=cut
+</b>
+</pre>
+</li>
+<li>Now we'll document the interface for our only subroutine (add only the <b>bold</b> part):
+<pre>
+...
+exit; 
+
+<b>=head2 Usage
+
+ Title   : Usage
+ Usage   : Usage( "lots of problems here, gotta go" )
+ Function: Prints a usage message to STDERR, then exits
+ Returns : nothing
+ Args    : Any messages you want to send to the user on exit. 
+
+=cut
+</b>
+sub Usage
+{
+...
+</pre>
+</li>
+<li>Now we will see what Perl thinks of this: 
+<br><code>unix_prompt$ <b>perldoc esearch_wrapper.pl</b></code>
+</li>
+<li>That's all we really need.  But now notice that there is a kind of redundancy-- we have 2 usage messages, one in the POD, and one in our Usage subroutine.  That's not good practice! Actually we can fix this easily, because there already exists a POD module (Pod::Usage) that will do this for us: 
+<ul>
+<li>First, add this at the top
+<br><code><b>use Pod::Usage;</b></code>
+<li>Now, delete the old <code>Usage</code> subroutine</li>
+<li>Finally, change the code to invoke pod2usage (works just like our old subroutine):
+<pre>
+GetOptions(
+    "email=s" => \$email,   
+    "query=s" => \$search_terms, 
+    "db=s" => \$db, 
+    "file=s" => \$outfile, 
+    "help|?" => \$help
+    ) or <b>pod2usage</b>( "Invalid command-line options." );
+
+<b>pod2usage</b>() if defined( $help ); 
+</pre>
+</li>
+</ul>
+</li>
+</ol>
+
+<footer>
+<hr>
+<p>Arlin Stoltzfus, 2011
+<p>$Id: perldoc_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $
+</footer>
+</html>

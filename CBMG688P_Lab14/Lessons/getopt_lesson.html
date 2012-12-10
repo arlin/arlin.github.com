@@ -1,0 +1,192 @@
+<html>
+<title>getopt_lesson.html -  BISI648b Best Practices laboratory (Stoltzfus)</title>
+
+<H1>Getopt::Long Lesson (BISI648b Best Practices laboratory - Stoltzfus)</h1>
+
+In this lesson, you will learn to use a module called Getopt::Long to implement a POSIX-compliant command-line interface. 
+
+<h2>background</h2>
+ see slide presentation
+ 
+<h2>exercise</h2>
+
+<ol>
+<li>first we will add the file <b>esearch_wrapper.pl</b> to our CVS repository 
+<pre>
+unix_prompt$ <b>cd ~/My_BISI648b/my_cvs/Perl</b>
+unix_prompt$ <b>cp ../../Lab15Link/Materials/esearch_wrapper.pl .</b>
+unix_prompt$ <b>chmod +x esearch_wrapper.pl</b>
+unix_prompt$ <b>cvs add esearch_wrapper.pl </b>
+unix_prompt$ <b>cvs commit -m "exercise to learn Getopt::Long"</b>
+</pre>
+</li>
+<li>Now, let's look at the file, which is a wrapper for NCBI's esearch utility.  It uses wget to execute the web query, though I have commented out that line (we'll uncomment it in a few minutes).  Here it is: 
+<pre>
+#!/usr/local/bin/perl -w 
+#
+# <code>$</code>Id$
+#
+use strict; 
+
+# process command-line arguments 
+#
+my ( $email, $db, $search_terms ); 
+$email = shift;  
+$db = shift; 
+$search_terms = shift; 
+
+# construct the URL (note: $0 is the current command)
+#
+my $base_url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"; 
+my $query_url = sprintf( "%s?tool=%s&email=%s&db=%s&term=%s", $base_url, $0, $email, $db, $search_terms ); 
+
+# execute the query 
+#
+# `wget -O esearch_query_result.xml "$query_url"`;
+
+printf STDERR "The results of the query ($query_url) are in esearch_query_results.xml\n";
+
+# and exit
+#
+exit; 
+</pre>
+</li>
+<li>Before going any further, let's fix an obvious problem with this code: "esearch_results.xml" appears twice, with a slight <b>spelling error</b>.  Will we confuse users with this?   Even without the spelling error, if we wanted to change the file name later, would we remember to change every instance?  Repeating string literals or other code in a file is not a good practice.  The best practice is to make a repeated thing a named (referenced) entity, and then just reference it.  In this case, we make the filename a variable, then invoke the variable twice.  In a few minutes, we will add a command-line option so that the user can set this variable from the command-line, which isn't possible until we fix this. Improvements to software often depend on modularity: its harder to debug, test, document, and re-use software that isn't modular.   
+<ul>
+<li>Add this
+<pre>
+<b>my $outfile = "esearch_query_results.xml"; </b>
+</pre>
+</li>
+<li>Now fix the wget command (please leave it commented-out for now) to look like this: 
+<pre>
+# `wget -O <b>$outfile</b> "$query_url"`;
+</pre>
+
+</li>
+<li>And now fix the print statement to look like this: 
+<pre>
+printf STDERR "The results of the query ($query_url) are in <b>$outfile</b>\n"; 
+</pre>
+</li>
+</ul>
+</li>
+<li>Now, let's "commit our changes" using CVS. 
+<pre>
+unix_prompt$ <b>cvs update</b>
+unix_prompt$ <b>cvs commit</b>
+</pre>
+</li>
+<li>I also think that we should put the wget command in a separate subroutine.  Why?  Because wget is crude, and in the future I would like to try other ways of exectuting the query, like libwww or bioperl.  But we will leave that for another day. 
+</li>
+<li>Before we implement a command-line interface, we need to design it.  Here is an example of what I want it to look like: 
+<pre>
+unix_prompt$ esearch_wrapper.pl --email=arlin@umd.edu --db=genome --query="Thermanaerovibrio+acidaminovorans[organism]"
+</pre>
+</li>
+<li>Now, we are ready to implement this using Getopt::Long.  
+<ul>
+<li>First, to use Getopt::Long, we need to tell Perl this: 
+<pre>
+use Getopt::Long;
+</pre>
+</li>
+<li>Now, let's delete all of the following stuff we don't need: 
+<pre>
+$email = shift;
+$db = shift;
+$search_terms = shift;
+</pre>
+</li>
+<li>Finally, we'll invoke Getopt::Long::GetOptions to process the command-line (explain syntax)
+<pre><b>
+GetOptions(
+    "email=s" => \$email,   
+    "query=s" => \$search_terms, 
+    "db=s" => \$db   
+  );  
+</b></pre>
+</li>
+<li>That's all.  Are we ready to try it out?  Please try out the command-line and check what our message says about the query.   Some things to try:
+<ul>
+<li>change the order in which the options are invoked</li>
+<li>try using abbreviations (works as long as they are unique), e.g. --qu</li>
+<li>you can even use single-letter-flags with one dash (if unique), e.g., -q</li>
+</ul>
+</li>
+</ul> <!-- end of list of steps with implementing getopt long -->
+</li>
+<li>How about adding another option?  If its going to write a file, I'd like the chance to say what it is, like this: 
+<br><pre>unix_prompt$ esearch_wrapper.pl [other options] --file=my_results.xml</pre>
+<ul>
+<li>To do this, we just need to add a line (don't forget the preceding comma): 
+<pre>
+GetOptions(
+    "email=s" => \$email,   
+    "query=s" => \$search_terms, 
+    "db=s" => \$db<b>,   
+    "file=s" => \$outfile </b>
+  );  
+</pre></li>
+</ul>
+<li>Now, let's go two steps further to make this useful to users.  We'll add a subroutine that explains usage, and invoke that for the user. 
+<ul>
+<li>Paste this into the end of the code (after <code>exit;</code>). 
+<pre><b>
+sub Usage
+{
+  my $command = $0; 
+  $command =~ s#^[^\s]/##; 
+  printf STDERR "@_\n" if ( @_ );
+  printf STDERR "usage: $command --db NCBI_DB --email EMAIL --query TERMS [--help|-?]\n";
+  exit;
+}
+</b></pre></li>
+<li>and then we'll need to specify another option when we invoke GetOptions (don't forget the preceding comma) and invoke this after option-parsing (note semi-colon):
+<pre>
+<b>my $help;</b>
+GetOptions(
+    "email=s" => \$email,   
+    "query=s" => \$search_terms, 
+    "db=s" => \$db,   
+    "file=s" => \$outfile <b>, 
+    "help|?" => \$help </b>
+  ) <b>or Usage( "Invalid command-line options. " )</b>; 
+  
+<b>Usage() if defined $help; </b> 
+</pre>
+</li>
+</ul>
+</li>
+<li>Note that, up to know, this script has been all interface.  We haven't written any implementations, and the key line in the script (wget) is commented out.   Shall we uncomment it?  The result is that we get an XML file with query results.  Try it. <br>
+</li>
+<li>Last, let's break into that XML file.  Remember that XML is a standard format.  This means that we can parse it using out-of-the-box tools.  Here's how: 
+<ul>
+<li>add this at the beginning
+<pre><b>
+use XML::Simple; 
+use Data::Dumper; 
+</b></pre></li>
+<li>and add this after the "print" but before "exit": 
+<pre><b>
+# now lets see what we got
+my $xml = new XML::Simple;
+my $output = $xml->XMLin("$outfile");
+print Dumper($output);
+</b></pre>
+
+<li>Note that the above code takes the XML and puts it into a perl hash.  We can access it via <code>$output</code>, which is the hashref, like this: 
+<pre>
+<b>printf ("the Id that we really want is %s\n", $output->{ IdList }->{ Id } );
+</b>
+</pre>
+</li>
+</ul>
+For more information, see the <code>XML::Simple</code> link on the Lab15 web page. 
+</li>
+</ol>
+
+<footer>
+<hr>
+<p>Arlin Stoltzfus, 2011
+<p>$Id: getopt_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $</footer></html>

@@ -1,0 +1,35 @@
+December 4, 2012
+
+
+December 9, 2011
+
+It took me about 2.5 hours to review and rejuvenate the class materials for this year.  Most of the time was spend on re-thinking where to locate files, and then fixing all the instructions, to reflect changes from last year (use of BlackBoard deprecated, and didn't have access as of today).  I also experienced some difficulty with the local cvs server.  This reminds me that I should test the grace cvs server before Monday.  
+
+December 20, 2010
+
+final notes on BISI548b class
+
+synopsis.  I volunteered to teach a "best practices" session in a course on computing for biologists.  I prepared a slide presentation and detailed lessons, conducted a 2-hour class, posted an assignment, and checked the assignment.  The materials could be used again for a similar class, or adapted for a longer or shorter class.  
+
+resources
+* files in camel12:~/Education/Teaching/BISI648b
+** html lesson guide-sheets (Lessons)
+** assignment (Assignment) 
+** powerpoint presentation 
+** PDFs of some interesting references 
+** other stuff 
+* module "best_practices" in camel5.umbi.umd.edu:/usr/local/cvsroot is a subset of what is in the directory
+* ELMS web site largely overlaps with what is local.  Only exceptions are the links to tutorials and help documents.  
+
+goals and approach
+I wanted to convey some of the practices that would be useful to programmers at a beginning level.  I wanted the course to have a strong practical component.  The materials are designed for 30 minutes of lecture (20 min plus questions), followed by 90 min of practical exercises.  
+
+outcome 
+The actual course seemed to work well.  the time came out right.  One student provided feedback to the effect that it was valuable.  I did not get feedback from the others.  There was no negative feedback.  
+
+time
+As per usual, I spent more time on this than expected.  It's shocking, really.  I spent about 30 hours total.  The details: I started well, spending about an hour in some planning back in October and early November.  But I didn't really get deeply into it until Nov 22, when I spent 6 hours figuring out how to build a lesson on CVS.  Week of Dec 6 I spent 11.25 hours in preparation of slides and lessons, plus 4 hours presenting the course (includes travel).  Then I spent 6 hours on checking and followup.  The next week, I spent 2.5 hours finishing the checking, updating everything one last time, and turning in grades. I spent inordinate amounts of time tracking down odd behavior in one student's script, and fixing little glitches in lessons and uploading to ELMS in what seemed like an endless process.  
+
+additional notes
+* I spent some time sorting out my ideas about what practices were most important.  
+* I did not get much help from other resources.  However, after the session, Steve Mount provided some interesting references which I downloaded and added to the archive.  These tended to confirm my decisions. 

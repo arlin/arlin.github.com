@@ -1,0 +1,64 @@
+<html>
+<title>modularize_lesson.html -  BISI648b, Best Practices laboratory (Stoltzfus)</title>
+
+<h1>Modularizing code (BISI648b Best Practices laboratory, Stoltzfus)</h1>
+
+In this lesson, we will take a few small steps to writing more modular code. 
+
+<h2>background</h2>
+
+Much could be said on the topic of modularization and its advantages.  Probably the most compelling thing to say is that the more experienced the programmer, and the more important and sustained the project, the smaller the modules get.  
+
+<h2>exercise</h2>
+
+In the previous exercise, we worked on stamp_output.pl, and it ended up like this:
+<pre>
+#!/usr/local/bin/perl -w
+#
+# stamp_output.pl - demo script for BISI648b 
+# 
+use strict; 
+
+my $version = '<code>$</code>Id$'; <!-- have to hide id token because CVS controls this html file -->
+my $date = `date`; 
+my $system = `uname -a`; 
+ 
+print "# version = $version\n# date = $date\n# system = $system\n"; 
+
+exit(0); 
+</pre>
+
+Its pretty obvious how we should modularize this, right?  By making a subroutine that creates the stamp.  
+
+<pre>
+<pre>
+#!/usr/local/bin/perl -w
+#
+# stamp_output.pl - demo script for BISI648b 
+# 
+use strict; 
+
+print MakeStamp; 
+
+exit; 
+
+####### subroutines ###### 
+#
+sub MakeStamp { 
+
+   my $version = '<code>$</code>Id$'; <!-- have to hide id token because CVS controls this html file -->
+   my $date = `date`; 
+   my $system = `uname -a`; 
+   
+   my $stamp = sprintf("# version = $version\n# date = $date\n# system = $system\n" 
+ 
+   return( $stamp ); 
+}
+</pre>
+
+<h2>exercise</h2>
+
+<footer>
+<hr>
+<p>Arlin Stoltzfus, 2011
+<p>$Id: modularize_lesson.html,v 1.4 2010/12/20 15:54:25 arlin Exp $</footer></html>
