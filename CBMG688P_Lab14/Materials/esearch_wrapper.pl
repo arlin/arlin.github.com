@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w 
+#!/usr/bin/perl -w 
 #
 # $Id: esearch_wrapper.pl,v 1.1.1.1 2010/12/15 15:33:39 arlin Exp $
 #
