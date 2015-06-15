@@ -2,7 +2,7 @@
 title: "KBL_stats"
 author: "Arlin Stoltzfus"
 date: "June 11, 2015"
-output: html_document
+output: pdf_document
 ---
 
 The observed results: 
@@ -17,9 +17,11 @@ obs_both <- 4   # pairs with both members accelerated
 ### Uncorrelated
 
 Calculate the expected values 
-both accelerated: p2 = 0.07661, expect 3.501 pairs, observed 4 pairs
-one accelerated: 2 * p * (1 - p) = 0.1597, expect 73.00 pairs, observed 72 pairs 
-none accelerated: (1 - p)2 = 0.8326, expect pairs 380.5 pairs, observed 381 pairs 
+
+* both accelerated: p2 = 0.07661, expect 3.501 pairs, observed 4 pairs
+* one accelerated: 2 * p * (1 - p) = 0.1597, expect 73.00 pairs, observed 72 pairs 
+* none accelerated: (1 - p)2 = 0.8326, expect pairs 380.5 pairs, observed 381 pairs 
+
 There are various ways to calculate a P value for this.  The simplest is just a chi-squared test on 3 categories with 2 degrees of freedom.  
 ```{r chi_squared_test}
 p <- 80/914
@@ -74,7 +76,7 @@ results <- data.frame(sd = sds, single = NA, both = NA, R2 = NA)
 # set up for multi-plot
 d <- ceiling(sqrt(length(sds)))
 oldpar <- par(no.readonly=TRUE)
-par(mfrow=c(d, d), mar=c(0.25, 0.25, 0.5, 0.25), omi=c(0.25, 0, 0.25, 0))
+par(mfrow=c(d, d), mar=c(0.75, 0.25, 0.25, 0.25), omi=c(0.25, 0, 0.25, 0))
 
 for (sd in  sds) {
   dupls <- data.frame(a = rates + rnorm(obs_all, 0, sd), b = rates + rnorm(obs_all, 0, sd))
@@ -96,6 +98,8 @@ for (sd in  sds) {
   b_accel <- sum((accel$a < threshold) & (accel$b >= threshold))
   a_accel <- sum((accel$a >= threshold) & (accel$b < threshold))
   text(x = c(1.05*plim[1], 0.95*plim[2], 0.95*plim[2]), y = c(0.95*plim[2], 0.95*plim[2], 1.05*plim[1]), c(b_accel, both, a_accel), cex = 1, col = "red")
+  rtxt <- paste("R^2 =", format(results$R2[results$sd == sd], digits = 2))
+  mtext(rtxt, side = 1, cex = 0.8)
 }
 mtext("A range of correlations between members of a duplicate pair", outer = TRUE, cex = 0.8)
 par(oldpar)
@@ -105,7 +109,7 @@ par(oldpar)
 
 A visualization of what Kellis seems to be thinking. 
 ```{r diagram_of_kbl_model}
-plot(c(0,1), c(0,1), pch = "", xlab = "right member of pair", ylab = "left member of pair", asp = 1)
+plot(c(0,1), c(0,1), pch = "", xlab = "Gene A", ylab = "Gene B", asp = 1)
 threshold <- 0.8
 abline(h = threshold, lwd = 2, col = "grey", lty = "dotted")
 abline(v = threshold, lwd = 2, col = "grey", lty = "dotted")
@@ -123,4 +127,86 @@ A binomial test comparing the number of asymmetric to symmetric accelerated pair
 ```{r binomial_test}
 binom.test(c(obs_accel - obs_both, obs_both), p = 0.5, conf.level = 0.95)
 ```
+
+## The actual rate data from Kellis, et al. 
+
+Get the "All Data" sheet from the "Duplicated Pairs.xls" spreadsheet file, and export it as tab-separated text.  There is a blank initial column, and some non-standard lines that we need to remove. The non-standard lines are spacer lines and a comment line.  They all have the wrong number of columns, so they are easy to detect. We can't plot out the key columns yet because they aren't parsed as numbers. 
+```{r}
+tmp <- strsplit(readLines("KBL_suppl_Duplicated_Pairs_sheet_All_Data.tsv"), "\t") 
+tmp <- tmp[sapply(tmp, length) == 20]
+mat <- matrix(unlist(tmp), ncol = 20, byrow = T)
+kbl_data <- data.frame(mat[-1, -1])
+colnames(kbl_data) <- mat[1, -1]
+```
+
+Now, we are going to look at the 2 most important columns, entitled 2div1 and 2divK.  Although the meaning of the columns is not described explicitly, I'm pretty sure that these comprise the relevant rate information, and more specifically: 
+* 2div1 refers to the rate of copy 2 relative to copy 1 
+* 2divK refers to the rate of the fast copy relative to the control, which is K. waltii 
+
+This interpretation is encouraged by some consistencies in the text and data files, namely the set of 76 accelerated pairs all have 2divK > 150 % as expected, and the 2div1 values are all > 100 %, as expected because the fast copy is arbitrary called "copy 2".  
+
+So, let's pull out these 2 columns, and convert them into numbers.  Note that these numbers are *not* comparable to the numbers above.  We need to transform them (below).
+```{r}
+kbl_rates <- data.frame(a = kbl_data[, "2div1"], b = kbl_data[, "2divK"])
+kbl_rates$a <- 0.01 * as.numeric(sub("%", "", kbl_rates$a))
+kbl_rates$b <- 0.01 * as.numeric(sub("%", "", kbl_rates$b))
+plot(kbl_rates)
+kbl_rates <- kbl_rates[!(is.na(kbl_rates$a) | is.na(kbl_rates$b)), ]
+plot(kbl_rates)
+```
+
+Now, we want to transform the data to a less kooky form. Instead of using a ratio of copy 2 to copy 1, we'll express each rate relative to K. waltii.  Thus, 2divK will be the normalized rate of copy 2, and 2divK/2div1 will be the normalized rate of copy 1.  Then to remove the polarization (the faster copy is always "copy 2", we'll randomly swap the rate values for half the pairs, then label them "Gene A" and "Gene B" as above. 
+```{r}
+dupls <- data.frame(a = kbl_rates$b / kbl_rates$a, b = kbl_rates$b)
+b_first_sample <- sample(1:dim(kbl_rates)[1], size = dim(kbl_rates)[1] / 2, replace = FALSE)
+tmp <- dupls$a[b_first_sample]
+dupls$a[b_first_sample] <- dupls$b[b_first_sample]
+dupls$b[b_first_sample] <- tmp
+
+threshold <- 1.5
+plim <- range(c(dupls$a, dupls$b))
+plot(dupls, xlab = "Gene A", ylab = "Gene B", pch = 20, col = "blue", asp = 1, xlim = plim, ylim = plim, cex = 0.6)
+abline(h = threshold, lwd = 2, lty = "dotted")
+abline(v = threshold, lwd = 2, lty = "dotted")
+```
+
+Now, let's toss out those outliers so that we can get a closer look at the main chunk of results.  
+```{r}
+pruned <- dupls[(dupls$a > 0) & (dupls$b > 0) & (dupls$b < 10), ]
+plim <- range(c(pruned$a, pruned$b))
+plot(pruned, xlab = "Gene A", ylab = "Gene B", pch = 20, col = "blue", asp = 1, xlim = plim, ylim = plim, cex = 0.6)
+abline(h = threshold, lwd = 2, lty = "dotted")
+abline(v = threshold, lwd = 2, lty = "dotted")
+```
+
+Obviously the rates are correlated.  How strongly?  How strongly correlated are rates in the unaccelerated class? 
+```{r}
+summary(lm(dupls$a ~ dupls$b))$r.squared
+# only the unaccelerated
+unaccel <- dupls[(dupls$a <= 1.5) & (dupls$b <= 1.5), ]
+summary(lm(unaccel$a ~ unaccel$b))$r.squared
+```
+
+Now let's simulate some data under the correlated model using a standard deviation corresponding to the results in panel 9, which is sd = 8.  We'll do 10,000 replicates and see how often we find 4 or fewer of the 76 accelerated pairs are both accelerated.  
+```{r random_correlated_pairs}
+sd <- 8
+results2 <- data.frame(rep = 1:10000, threshold = NA, single = NA, both = NA, R2 = NA)
+
+for (rep in results2$rep) {
+  dupls <- data.frame(a = rates + rnorm(obs_all, 0, sd), b = rates + rnorm(obs_all, 0, sd))
+    # find the threshold that gives the right number of "accelerated" pairs
+  threshold <- quantile(apply(dupls, 1, function(x) max(x)), 1 - obs_accel/obs_all)
+  accel <- dupls[(dupls$a >= threshold) | (dupls$b >= threshold), ]
+  # compare 
+  results2$both[rep] <- sum((accel$a >= threshold) & (accel$b >= threshold))
+  results2$single[rep] <- dim(accel)[1] - results2$both[rep]
+  results2$R2[rep] <- summary(lm(dupls$a ~ dupls$b))$r.squared
+  results2$threshold[rep] <- threshold
+}
+sum(results2$single >= 72)
+hist(results2$single, main = "10,000 replicates", xlab = "asymmetric pairs (out of 76 accelerated)")
+sd(results2$single)
+mean(results2$single)
+``` 
+
 
