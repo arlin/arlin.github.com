@@ -1,0 +1,39 @@
+---
+title: "Gene Duplication Rate"
+author: "Arlin Stoltzfus"
+date: "June 18, 2015"
+output: html_document
+---
+
+## The concept of a duplication rate   
+
+The concept of a rate of duplication mutations is most common in the literature of molecular evolution, where the rate of gene duplication is of great interest.  The rates for various types of mutation also are of interest in studies of heritable diseases and cancer.  For many types of mutations, recent mutation-accumulation experiments and next-generation sequencing have led to some of the first direct measurements of mutation rates under natural conditions. 
+
+The rate of duplication is most often expressed as a per-locus rate with units of events per generation.  Some recent studies that provide direct evidence report CNV (copy-number variation) events per generation regardless of size. 
+
+However, expressing the duplication rate for genes (loci) as a scalar value is imprecise, because genes and duplications vary in length.  Under any rational model, the duplication rate of a 5-kb gene is smaller than that of a 1-kb gene.   
+
+## Model 
+
+Each duplication can be described by two breakpoints.  Arbitrarily, we treat the 5’ breakpoint as the point of initiation of a domain of duplication that extends d bp downstream.  Duplication of a gene is complete if it initiates at or before the first bp of the gene, and terminates on or after the last bp.  
+
+We assume that possible initiation sites are uniformly distributed in the genome.  Therefore, the rate of duplication initiation per site is the same for every site, and is equal to the total rate of events (duplications) per genome, divided by the number of sites.  
+
+In this case, the duplication process can be described fully by a total rate R (in terms of events per site per generation), and a length distribution.   If the length distribution D is scaled so that the integral is the total rate of duplication, then this is all we need, and D(x) is the per site rate of initiating duplications of length x.  
+
+In considering whether a duplication will contain a gene, we assume further that breakpoints are independent of genes, and in order to avoid edge effects, we assume that the genome is circular.
+
+## Problem 1.  Given D, what is the expected duplication rate for a gene of known length g? 
+
+Solution. Only duplications of length g or more can result in a complete duplication of the gene.  Therefore, we are interested only in the shaded portion of D, from D(x = g) to D(x = ∞).  For a duplication of length g, there is only one possible initiation site (namely, the first bp) that will cover the entire gene.  For a duplication of length x > g, there are x – g + 1 possible initiation sites.   For instance, for a gene of length 1200 bp and a duplication of length 1500 bp, there is a block of 301 initiation sites, including the starting site and 300 upstream sites, from which a duplication will extend to cover the whole gene.  Then rg, the total rate of complete duplications for a gene of length g, can be expressed as a sum for a discretized distribution 
+
+$$\sum_{x=g}^\infty D(x)(x-g+1)$$
+
+## Problem 2. Given D and G, what is the expected rate of whole-gene duplication? 
+
+The distributions of duplication lengths and gene lengths, D and G, typically are estimated independently, e.g., D can be estimated from a variant-calling method without knowing where the genes are.  We may wish to test the null model of duplication by comparing the calculated whole-gene duplication rate with the observed rate.  We may wish to compare duplication rates for chromosomes or gene families, each of which specifies a distribution of gene lengths.   
+
+Solution. The solution follows from the solution to problem 1.  We just have to normalize this in such a way that it represents an average for genes with lengths distributed as G, weighting each rg value (as defined above) by the frequency of genes of length g.  
+
+$$\sum_{g=1}^\infty G(g)r_g$$
+
