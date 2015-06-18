@@ -7,33 +7,153 @@ output: html_document
 
 ## The concept of a duplication rate   
 
-The concept of a rate of duplication mutations is most common in the literature of molecular evolution, where the rate of gene duplication is of great interest.  The rates for various types of mutation also are of interest in studies of heritable diseases and cancer.  For many types of mutations, recent mutation-accumulation experiments and next-generation sequencing have led to some of the first direct measurements of mutation rates under natural conditions. 
+The concept of a rate of duplication mutations is common in the literature of molecular evolution, where the rate of gene duplication is of interest, due to its importance in gene-family evolution.  In studies of human mutation and cancer, duplications fall into the category of "structural variations".  Recent advances in technology have made it possible to measure rates of such structural variations rather directly, under natural conditions { eichler; kloosterman }. 
 
 The rate of duplication is most often expressed as a per-locus rate with units of events per generation.  Some recent studies that provide direct evidence report CNV (copy-number variation) events per generation regardless of size. 
 
-However, expressing the duplication rate for genes (loci) as a scalar value is imprecise, because genes and duplications vary in length.  Under any rational model, the duplication rate of a 5-kb gene is smaller than that of a 1-kb gene.   
+For the case of a pre-specified genomic segment of known length (1 or more bp), the meaning of a scalar rate of duplication is straightforward: it is the rate of events that include the segment.  
+
+However, for the case of an overall duplication rate, or a rate for an unspecified set of genes, expressing the duplication rate as a scalar value is without a clear meaning, because genes and duplications vary in length.  The duplication rate of a longer gene will be smaller than that of shorter gene.  Given two organisms A and B with the same genome size, the same number of genes, and the same rate of duplication events per generation, the rate of gene duplication will be higher in the organism where the genes are smaller, or in the organism where the duplications are longer.  If organism A has shorter genes, but organism B has longer duplications, one would require an appropriate calculation to determine which has the higher total rate of gene duplication. 
+
+Our purpose here is to develop a model for duplications that will allow us to make such calculations. 
 
 ## Model 
 
-Each duplication can be described by two breakpoints.  Arbitrarily, we treat the 5’ breakpoint as the point of initiation of a domain of duplication that extends d bp downstream.  Duplication of a gene is complete if it initiates at or before the first bp of the gene, and terminates on or after the last bp.  
+Here we consider either tandem or non-tandem duplications.  Each duplication can be described by two breakpoints.  A breakpoint is an inter-nucleotide sites, i.e., between adjacent base-pairs.  Arbitrarily, internucleotide site n is designated as the site between base-pair n and n - 1.  
 
-We assume that possible initiation sites are uniformly distributed in the genome.  Therefore, the rate of duplication initiation per site is the same for every site, and is equal to the total rate of events (duplications) per genome, divided by the number of sites.  
+For instance, in the figure below, duplication B extends from genomic coordinate 0.2 through coordinate 0.7.  Arbitrarily, we treat the 5’ breakpoint as the point of initiation of a domain of duplication that extends d bp downstream, where d is the length of the duplication.  In the case of a tandem duplication, the state of the genome after a duplication is that the segment between the 5' and 3' breakpoints is repeated twice in succession.  For a non-tandem duplication (i.e., a duplicative transposition), one copy of duplicated segment remains in its previous location, and the other is inserted at some unspecified location elsewhere in the genome. 
+
+```{r dupl_basics, echo=FALSE}
+# define a function to plot some bars 
+hbar <- function(xs, y, tick_size, ...) { 
+  lines(xs, c(y, y), ...)
+  ys <- c(y + tick_size / 2, y - tick_size / 2)
+  for (side in 1:2) { 
+    lines(c(xs[side], xs[side]), ys, ...)
+  }
+}
+
+plot(c(0,1), c(0, 0.6), type = "n", yaxt = "n", ylab = "", xlab = "genomic coordinate", frame.plot = F)
+abline(h = 0.5)
+rect(0.3, 0.45, 0.6, 0.55, col = "green")
+text(x = c(0, 1), y = c(0.55, 0.55), labels = c("5'", "3'"))
+# some duplications that include or fail to include the gene
+hbar(c(0.1, 0.5), 0.4, 0.04, lwd = 3, col = "grey")
+hbar(c(0.2, 0.7), 0.3, 0.04, lwd = 1.5, col = "black")
+hbar(c(0.25, 0.45), 0.2, 0.04, lwd = 3, col = "grey")
+hbar(c(0.35, 0.85), 0.1, 0.04, lwd = 3, col = "grey")
+text(x = c(0.05, 0.15, 0.2, 0.3), y = c(0.4, 0.3, 0.2, 0.1), labels = c("A", "B", "C", "D"))
+```
+
+We assume that possible initiation sites are uniformly distributed in the genome.  Therefore, the rate of duplication initiation per site is the same for every site, and is equal to the total rate of events (duplications) per genome, divided by the number of genomic sites.  
 
 In this case, the duplication process can be described fully by a total rate R (in terms of events per site per generation), and a length distribution.   If the length distribution D is scaled so that the integral is the total rate of duplication, then this is all we need, and D(x) is the per site rate of initiating duplications of length x.  
 
-In considering whether a duplication will contain a gene, we assume further that breakpoints are independent of genes, and in order to avoid edge effects, we assume that the genome is circular.
+In considering whether a duplication will contain a gene, we assume further that breakpoints are independent of genes.  In order to avoid edge effects, we assume that the genome is circular.   
+
+Duplication of a gene is complete if it initiates at or before the first bp of the gene, and terminates on or after the last bp.  In the figure above, duplications A, B and C all initiate upstream of the gene, but only B is long enough to extend through it.  Duplication D is long enough to include the gene, but begins inside it and therefore fails to duplicate the gene.  
 
 ## Problem 1.  Given D, what is the expected duplication rate for a gene of known length g? 
 
-Solution. Only duplications of length g or more can result in a complete duplication of the gene.  Therefore, we are interested only in the shaded portion of D, from D(x = g) to D(x = ∞).  For a duplication of length g, there is only one possible initiation site (namely, the first bp) that will cover the entire gene.  For a duplication of length x > g, there are x – g + 1 possible initiation sites.   For instance, for a gene of length 1200 bp and a duplication of length 1500 bp, there is a block of 301 initiation sites, including the starting site and 300 upstream sites, from which a duplication will extend to cover the whole gene.  Then rg, the total rate of complete duplications for a gene of length g, can be expressed as a sum for a discretized distribution 
+An example distribution D is shown below.  This distribution is truncated at the left end, ignoring short duplications. 
 
-$$\sum_{x=g}^\infty D(x)(x-g+1)$$
+The expected duplication rate is the same whether one is considering a gene of length g, or any other segment of length g.  Only duplications of length g or more can result in a complete duplication of the segment.  Therefore, we are interested only in the part of the distribution from D(x = g) to D(x = ∞).  This is illustrated in the figure below for a segment of length 200.  Only the duplications to the right of the dotted line are long enough to cover this segment.  
+
+```{r dupl_dist, echo=FALSE}
+a <- (1:1000) * 50
+b <- a^-1.05
+plot(a, b, log = "x", type = "l", xlab = "duplication length", yaxt = 'n', ylab = "probability density")
+rnge <- range(b)
+seg <- 200
+rb <- range(b)
+# 
+# don't do the gene box because the left truncation of x is confusing
+# rect(range(a)[1] - 10, rb[1], seg, rb[1] + 0.1 * (rb[2] - rb[1]), col = "green") # lower left, upper right
+abline(v = seg, lwd = 2, lty = "dotted")
+```
+
+For a duplication of length g, there is only one possible initiation site such that the duplication will cover a segment of length g, namely, the first site of the segment.  For a duplication of length x > g, there are x – g + 1 possible initiation sites.   For instance, for a gene of length 1200 bp and a duplication of length 1500 bp, there is a block of 301 initiation sites, including the starting site and 300 upstream sites, from which a duplication will extend to cover the whole gene.  
+
+Thus, to account for the way that longer duplications are more likely to include a gene, one only has to multiply the density for length class x > g by x – g + 1.  Then the total rate of complete duplications for a gene of length g can be expressed as a sum for a discretized distribution 
+
+(Eqn 1) $$r_g = \sum_{x=g}^\infty D(x)(x-g+1)$$
 
 ## Problem 2. Given D and G, what is the expected rate of whole-gene duplication? 
 
+```{r gene_plot, echo=FALSE}
+hist(rlnorm(10000, meanlog = 7, sdlog = 0.5), xlab = "length (bp)", main = "G, a gene length distribution", yaxt = 'n', ylab = "density")
+```
+
+Given a distribution of gene lengths, e.g., the lognormal distribution above, what is the expected rate of whole-gene duplication?  The solution is the same whether one is talking about genes, or about any other kind of segment.  
+
+The solution follows from the solution to problem 1.  We just have to normalize this in such a way that it represents an average for genes with lengths distributed as G, weighting each r_g value (as defined above) by the frequency of genes of length g.  
+
+(Eqn 2) $$\sum_{g=1}^\infty G(g)r_g = \sum_{g=1}^\infty G(g)\sum_{x=g}^\infty D(x)(x-g+1)$$ 
+
+## Problem 3.  Given D, what is the rate of disruptive partial duplications? 
+
+(not finished. relates to the problem of deletions below).  
+
+## Application to other types of mutations 
+
+These calculations are relevant to some other types of variations with 2 or more breakpoints.  For instance, deletions and inversions are characterized by 2 break-points, thus the formulas above apply directly to them.  In each of these cases, it is inadequate to present a scalar rate of mutation.  Although one can apply a similar model, the types of calculations that are useful are slightly different. 
+
+### Deletions
+
+Although we can apply Eqn 1 directly to the case of deletions, typically one is not concerned with the question of whether a deletion covers an entire gene.  A deletion of **any substantial fraction** of the gene typically would be a null allele with the same effect as a complete deletion.  
+
+Let us suppose that a fraction f is the size of a lethal deletion.  That is, if f = 0.1, then a deletion of 10 % or more anywhere in the gene will be a null mutation.  For a specific block inside the gene with a length of 10 % of the gene length, the rate of deletions is calculated in exactly the same way as for a duplication above, where length = 0.1 * g.  One might hope that we could divide the gene up into 0.9 * g overlapping segments each of length 0.1 * g, then sum the rate of deletion over these segments.  However, that would over-estimate the rate, because we would be double-counting some deletions that cover multiple overlapping segments.  
+
+Let's break the problem down.  
+
+```{r echo=FALSE}
+# plot(c(0,1), c(0, 0.6), type = "n", yaxt = "n", ylab = "", xlab = "genomic coordinate", frame.plot = F)
+# abline(h = 0.3)
+# rect(0.3, 0.25, 0.6, 0.35, col = "green")
+# rect(0.3, 0.25, 0.33, 0.35, col = "red")
+# text(x = c(0, 1), y = c(0.35, 0.35), labels = c("5'", "3'"))
+# some duplications that include or fail to include the gene
+# hbar(c(0.1, 0.5), 0.4, 0.04, lwd = 3, col = "grey")
+# hbar(c(0.2, 0.7), 0.3, 0.04, lwd = 1.5, col = "black")
+# hbar(c(0.25, 0.45), 0.2, 0.04, lwd = 3, col = "grey")
+# hbar(c(0.35, 0.85), 0.1, 0.04, lwd = 3, col = "grey")
+# text(x = c(0.05, 0.15, 0.2, 0.3), y = c(0.4, 0.3, 0.2, 0.1), labels = c("A", "B", "C", "D"))
+```
+
+First, consider deletions that begin upstream and extend through the first 10 % of the gene.  By treating this block as a segment with length g, the rate of deletions covering the segment is calculated by applying Eqn 1 above, replacing g (the length of the whole gene) with fg (the length of the first 10 %).  
+
+(Eqn 3) $$r_{lethal upstream} = \sum_{x=fg}^\infty D(x)(x-fg+1)$$
+
+This rate will include deletions that (1) begin anywhere from any site upstream, up to the first bp, and (2) end at any site after the first 10 % of the gene.  Thus, this will include some deletions that extend all the way through the gene.  
+
+Next, we must add to the above number, all the deletions that start **within** the gene, and cover at least 10 % of it.  
+
+These deletions could initiate at any site from position 2 (the internucleotide site before bp 2), to position g * 0.9 (where the last 10 % begins), but they must extend for at least 10 % of the gene.  Any deletion that initiates in this interval and extends for a length of at least 10 % of the gene, is a disruptive deletion.  So, we just take the number of eligible sites and multiply that by the density of deletions of length fg or more:  
+
+(Eqn 4) $$r_{lethal inside} = (g(1-f)-1)\sum_{x=fg}^\infty D(x)$$
+
+and the total rate of lethal deletions, defined as deletions of any segment of length fg, is 
+
+(Eqn 5) $$r_{lethal} = \sum_{x=fg}^\infty D(x)(x-fg+1) + (g(1-f)-1)\sum_{x=fg}^\infty D(x)$$
+
+
+### Inversions 
+
+Again, we can apply Eqn 1 directly to inversions.  If we wish to know what is the expected rate of a complete inversion of a segment, this can be calculated from a distribution of inversion lengths I, where I is treated analogously to D above.
+
+However, it is more likely that, in the case of inversions, we are interested in the rate of disruptive inversions, i.e., inversions with a breakpoint inside a gene, resulting in a disruption.  See problem 3 above.  
+
+### Transpositions 
+
+A transposition (whether duplicative or non-duplicative) is characterized by 3 break-points, two of which define a segment, and the third of which defines a destination.
+
+The chance that a segment will be included wholly in a transposition is calculated from Eqn 1.  
+
+However, in the case of transpositions, the assumption of uniform breakpoints is so far from reality that the calculation is meaningless.  
+
+## Biological applications 
+
+### Evaluating null model and detecting rate heterogeneities
+
 The distributions of duplication lengths and gene lengths, D and G, typically are estimated independently, e.g., D can be estimated from a variant-calling method without knowing where the genes are.  We may wish to test the null model of duplication by comparing the calculated whole-gene duplication rate with the observed rate.  We may wish to compare duplication rates for chromosomes or gene families, each of which specifies a distribution of gene lengths.   
-
-Solution. The solution follows from the solution to problem 1.  We just have to normalize this in such a way that it represents an average for genes with lengths distributed as G, weighting each rg value (as defined above) by the frequency of genes of length g.  
-
-$$\sum_{g=1}^\infty G(g)r_g$$
 
